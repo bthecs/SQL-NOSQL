@@ -2,7 +2,9 @@ import pandas as pd
 import pymongo
 import os
 from utils import *
+import sqlite3
 
+#lectura de bases sql
 def read_sql():
     portin_dir = os.path.dirname("BASE PORT IN/")
     portout_dir = os.path.dirname("BASE PORT OUT/")
@@ -24,7 +26,7 @@ def read_sql():
     return df_final
 
     
-
+#creacion de bases sql segun su provincia
 def create_dataframe_provinces(df):
     area_code = pd.read_excel('area_code.xlsx')
                     
@@ -48,6 +50,7 @@ def create_dataframe_provinces(df):
         df.to_sql('clients', 'sqlite:///provinces/' + province + '.db', if_exists='replace')
 
 
+# crear colecciones con nombres de las bases
 def create_collection():
     # crear una base de datos en puerto 27018
     client = pymongo.MongoClient('localhost', 27017)
@@ -64,9 +67,28 @@ def create_collection():
             collection_value = provinces[collection_name]
             db.create_collection(collection_value)
 
+            sql_query = "SELECT * FROM clients"
+            sqlite3_connection = sqlite3.connect('provinces/' + db_file)
+            cursor = sqlite3_connection.cursor()
+            cursor.execute(sql_query)
+            print
+
+            for row in cursor.fetchall():
+                doc = {
+                    'line': row[1],
+                    'dni': row[2],
+                    'company': row[3],
+                    'date_port_in': row[6],
+                    'date_port_out': row[7]
+                }
+                db[collection_value].insert_one(doc)
+
+            cursor.close()
+            sqlite3_connection.close()
+
         else:
             print(db_file + " does not exist")
             continue
             
 
-
+create_collection()
