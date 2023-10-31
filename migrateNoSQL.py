@@ -1,6 +1,7 @@
 import pandas as pd
 import pymongo
 import os
+from utils import *
 
 def read_sql():
     portin_dir = os.path.dirname("BASE PORT IN/")
@@ -47,5 +48,25 @@ def create_dataframe_provinces(df):
         df.to_sql('clients', 'sqlite:///provinces/' + province + '.db', if_exists='replace')
 
 
-data = read_sql()
-create_dataframe_provinces(data)
+def create_collection():
+    # crear una base de datos en puerto 27018
+    client = pymongo.MongoClient('localhost', 27017)
+    db = client['bases']
+    
+    # leer sql y crear colecciones
+    sql = [i for i in os.listdir('provinces/') if i.endswith(".db")]
+    #crear colecciones con las bases de datos sql
+    for db_file in sql:
+        collection_name = db_file.split(".")[0]
+        # validar si collection_name existe en el diccionario provinces
+        if collection_name in provinces:
+            # si existe crear colleccion con el valor de la key de provinces
+            collection_value = provinces[collection_name]
+            db.create_collection(collection_value)
+
+        else:
+            print(db_file + " does not exist")
+            continue
+            
+
+
