@@ -398,3 +398,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 *env
+*BASE PORT IN
+*BASE PORT OUT
