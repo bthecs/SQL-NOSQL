@@ -24,4 +24,28 @@ def read_sql():
 
     
 
+def create_dataframe_provinces(df):
+    area_code = pd.read_excel('area_code.xlsx')
+                    
+    code_area = {}
+    for index, row in area_code.iterrows():
+        code_area[str(row['CÓDIGO DE AREA'])] = [row['PROVINCIA']]
 
+    df['province'] = None
+    df['line'].astype(str)
+
+    df['province'] = df['line'].apply(lambda x: code_area[x[:2]][0] if x[:2] in code_area else (code_area[x[:3]][0] if x[:3] in code_area else (code_area[x[:4]][0] if x[:4] in code_area else '')))
+
+    df = df.drop_duplicates(subset=['line'], keep='first')
+
+    #crear diferentes dataframes segun su provincia
+    df_dict = {}
+    for province, group in df.groupby('province'):
+        df_dict[province] = group.copy()
+
+    for province, df in df_dict.items():
+        df.to_sql('clients', 'sqlite:///provinces/' + province + '.db', if_exists='replace')
+
+
+data = read_sql()
+create_dataframe_provinces(data)
